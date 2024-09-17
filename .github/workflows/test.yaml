@@ -14,12 +14,8 @@ jobs:
     name: Checkout
     runs-on: ${{ vars.RUNS_ON }}
     outputs:
-      app-name: ${{ vars.APP_NAME }}-${{ steps.set-output-defaults.outputs.branch-name }}
       # app-name: ${{ vars.APP_NAME }}
-      product: ${{ steps.set-output-defaults.outputs.product }}
       artifactory: ${{ steps.set-artifactory-variable.outputs.result }}
-      branch-name: ${{ steps.set-output-defaults.outputs.branch-name }}
-      repo-type: ${{ steps.set-output-defaults.outputs.repo-type }}
       content: ${{ steps.set-cms-workflow-component-values.outputs.content }}
 
     steps:
@@ -60,30 +56,7 @@ jobs:
         if: "${{ env.branch-name == '' }}"
         run: |
           echo "branch-name=${{ github.base_ref }}" >> $GITHUB_ENV
-      - name: Process string case of branch name
-        id: set-LC-branch-name
-        uses: ASzc/change-string-case-action@v5
-        with:
-          string: ${{ env.branch-name }}
 
-      - name: Process string case of repo type
-        id: set-LC-repo-type
-        uses: ASzc/change-string-case-action@v5
-        with:
-          string: ${{ vars.REPO_TYPE_DEV }}
-
-      - name: Process string case of product
-        id: set-LC-product
-        uses: ASzc/change-string-case-action@v5
-        with:
-          string: ${{ vars.PRODUCT }}
-
-      - name: Set outputs default values
-        id: set-output-defaults
-        run: |
-          echo "branch-name=${{ steps.set-LC-branch-name.outputs.lowercase }}" >> $GITHUB_OUTPUT
-          echo "repo-type=${{ steps.set-LC-repo-type.outputs.lowercase }}" >> $GITHUB_OUTPUT
-          echo "product=${{ steps.set-LC-product.outputs.lowercase }}" >> $GITHUB_OUTPUT
       - name: Set CMS workflow component values
         id: set-cms-workflow-component-values
         run: |

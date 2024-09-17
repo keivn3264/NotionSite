@@ -1,0 +1,94 @@
+name: CMS deploy to DEV
+on:
+  workflow_dispatch:
+    inputs:
+      DEPLOY_OR_FALLBACK:
+        type: choice
+        description: Deploy or Fallback
+        options:
+        - DP
+        - FB
+
+jobs:
+  _Init_:
+    name: Checkout
+    runs-on: ${{ vars.RUNS_ON }}
+    outputs:
+      app-name: ${{ vars.APP_NAME }}-${{ steps.set-output-defaults.outputs.branch-name }}
+      # app-name: ${{ vars.APP_NAME }}
+      product: ${{ steps.set-output-defaults.outputs.product }}
+      artifactory: ${{ steps.set-artifactory-variable.outputs.result }}
+      branch-name: ${{ steps.set-output-defaults.outputs.branch-name }}
+      repo-type: ${{ steps.set-output-defaults.outputs.repo-type }}
+      content: ${{ steps.set-cms-workflow-component-values.outputs.content }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set variable of artifactory's docker registry
+        uses: bluwy/substitute-string-action@v2
+        id: set-artifactory-variable
+        with:
+          _input-text: ${{ vars.ARTIFACTORY_URL }}
+          https://: ''
+          /artifactory: ''
+
+      - name: Set branch name by push
+        if: startsWith(github.ref, 'refs/heads')
+        run: |
+          echo "branch-name=${{ github.ref_name }}" >> $GITHUB_ENV
+      - name: Set branch name by pull
+        if: startsWith(github.ref, 'refs/pull')
+        run: |
+          echo "branch-name=${{ github.head_ref }}" >> $GITHUB_ENV
+      - name: Set branch name by tag
+        if: startsWith(github.ref, 'refs/tags')
+        uses: bluwy/substitute-string-action@v2
+        id: set-tag-branch-name
+        with:
+          _input-text: ${{ github.ref_name }}
+          .: '-'
+
+      - name: Set branch name by tag
+        if: startsWith(github.ref, 'refs/tags')
+        run: |
+          echo "branch-name=${{ steps.set-tag-branch-name.outputs.result }}" >> $GITHUB_ENV
+      - name: Check empty in branch name
+        if: "${{ env.branch-name == '' }}"
+        run: |
+          echo "branch-name=${{ github.base_ref }}" >> $GITHUB_ENV
+      - name: Process string case of branch name
+        id: set-LC-branch-name
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{ env.branch-name }}
+
+      - name: Process string case of repo type
+        id: set-LC-repo-type
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{ vars.REPO_TYPE_DEV }}
+
+      - name: Process string case of product
+        id: set-LC-product
+        uses: ASzc/change-string-case-action@v5
+        with:
+          string: ${{ vars.PRODUCT }}
+
+      - name: Set outputs default values
+        id: set-output-defaults
+        run: |
+          echo "branch-name=${{ steps.set-LC-branch-name.outputs.lowercase }}" >> $GITHUB_OUTPUT
+          echo "repo-type=${{ steps.set-LC-repo-type.outputs.lowercase }}" >> $GITHUB_OUTPUT
+          echo "product=${{ steps.set-LC-product.outputs.lowercase }}" >> $GITHUB_OUTPUT
+      - name: Set CMS workflow component values
+        id: set-cms-workflow-component-values
+        run: |
+          content=$(jq -n --compact-output \
+          --arg buildRunner "${{ vars.CMS_COMPONENT_RUNNER_NAME }}" \
+          '$ARGS.named')
+          echo content=$content
+          echo "content=$content" >> $GITHUB_OUTPUT

@@ -13,35 +13,8 @@ jobs:
   _Init_:
     name: Checkout
     runs-on: ${{ vars.RUNS_ON }}
-    outputs:
-      # app-name: ${{ vars.APP_NAME }}
-      content: ${{ steps.set-cms-workflow-component-values.outputs.content }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-
-      - name: Set branch name by push
-        if: startsWith(github.ref, 'refs/heads')
-        run: |
-          echo "branch-name=${{ github.ref_name }}" >> $GITHUB_ENV
-      - name: Set branch name by pull
-        if: startsWith(github.ref, 'refs/pull')
-        run: |
-          echo "branch-name=${{ github.head_ref }}" >> $GITHUB_ENV
-
-      - name: Set branch name by tag
-        if: startsWith(github.ref, 'refs/tags')
-        run: |
-          echo "branch-name=${{ steps.set-tag-branch-name.outputs.result }}" >> $GITHUB_ENV
-      - name: Check empty in branch name
-        if: "${{ env.branch-name == '' }}"
-        run: |
-          echo "branch-name=${{ github.base_ref }}" >> $GITHUB_ENV
-
       - name: Set CMS workflow component values
         id: set-cms-workflow-component-values
         run: |

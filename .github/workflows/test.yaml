@@ -24,5 +24,5 @@ jobs:
         id: set-cms-workflow-component-values
         run: |
           content=$(jq -n --compact-output --arg buildRunner "${{ vars.CMS_COMPONENT_RUNNER_NAME }}" '$ARGS.named')
-          echo content=$content
           echo "content=$content" >> $GITHUB_OUTPUT
+        shell: bash

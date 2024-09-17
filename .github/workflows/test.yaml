@@ -15,7 +15,6 @@ jobs:
     runs-on: ${{ vars.RUNS_ON }}
     outputs:
       # app-name: ${{ vars.APP_NAME }}
-      artifactory: ${{ steps.set-artifactory-variable.outputs.result }}
       content: ${{ steps.set-cms-workflow-component-values.outputs.content }}
 
     steps:
@@ -24,13 +23,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set variable of artifactory's docker registry
-        uses: bluwy/substitute-string-action@v2
-        id: set-artifactory-variable
-        with:
-          _input-text: ${{ vars.ARTIFACTORY_URL }}
-          https://: ''
-          /artifactory: ''
 
       - name: Set branch name by push
         if: startsWith(github.ref, 'refs/heads')
@@ -40,13 +32,6 @@ jobs:
         if: startsWith(github.ref, 'refs/pull')
         run: |
           echo "branch-name=${{ github.head_ref }}" >> $GITHUB_ENV
-      - name: Set branch name by tag
-        if: startsWith(github.ref, 'refs/tags')
-        uses: bluwy/substitute-string-action@v2
-        id: set-tag-branch-name
-        with:
-          _input-text: ${{ github.ref_name }}
-          .: '-'
 
       - name: Set branch name by tag
         if: startsWith(github.ref, 'refs/tags')
